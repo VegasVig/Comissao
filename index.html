@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comissão André</title>
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:radial-gradient(circle at top,#0a0f1f,#000);
+  color:#fff;
+}
+
+.container{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  min-height:100vh;
+}
+
+.sidebar{
+  background:#050a18;
+  padding:20px;
+  border-right:1px solid #0ff3;
+  text-align:center;
+}
+
+.sidebar img{
+  width:200px;
+  border-radius:20px;
+  box-shadow:0 0 25px #00f7ff55;
+}
+
+.sidebar h2{
+  margin-top:15px;
+  color:#00eaff;
+}
+
+.main{
+  padding:30px;
+}
+
+h1{
+  font-size:38px;
+  color:#00eaff;
+}
+
+.card{
+  background:#0b132b;
+  padding:20px;
+  border-radius:15px;
+  margin-top:20px;
+  box-shadow:0 0 15px #00eaff22;
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#020617;
+  color:#fff;
+}
+
+button{
+  margin-top:15px;
+  padding:14px;
+  width:100%;
+  border:none;
+  border-radius:12px;
+  background:#00eaff;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:15px;
+  margin-top:20px;
+}
+
+.stat{
+  background:#020617;
+  padding:15px;
+  border-radius:12px;
+  text-align:center;
+  box-shadow:0 0 10px #00eaff22;
+}
+
+.table{
+  width:100%;
+  margin-top:20px;
+  border-collapse:collapse;
+}
+
+.table th,.table td{
+  padding:10px;
+  border-bottom:1px solid #00eaff33;
+}
+
+.table th{
+  color:#00eaff;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="sidebar">
+    <img src="assets/Andre.jpg" alt="André">
+    <h2>Comissão André</h2>
+  </div>
+
+  <div class="main">
+    <h1>💰 Comissão André</h1>
+
+    <div class="card">
+      <h3>Novo Cálculo</h3>
+
+      <input id="cliente" placeholder="Cliente">
+      <input id="valor" type="number" placeholder="Valor">
+
+      <select id="tipo">
+        <option value="5">Venda 5%</option>
+        <option value="25">Lead 25%</option>
+        <option value="100">Meu Cliente 100%</option>
+      </select>
+
+      <button onclick="add()">Adicionar</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <h4>Total</h4>
+        <p id="total">R$ 0.00</p>
+      </div>
+      <div class="stat">
+        <h4>Clientes</h4>
+        <p id="clientes">0</p>
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Valor</th>
+          <th>%</th>
+          <th>Recebimento</th>
+        </tr>
+      </thead>
+      <tbody id="tabela"></tbody>
+    </table>
+
+  </div>
+
+</div>
+
+<script>
+let total = 0;
+let qtd = 0;
+
+function add(){
+  let cliente = document.getElementById('cliente').value;
+  let valor = parseFloat(document.getElementById('valor').value);
+  let tipo = parseFloat(document.getElementById('tipo').value);
+
+  if(!cliente || !valor){
+    alert('Preencha tudo');
+    return;
+  }
+
+  let rec = valor * tipo / 100;
+  total += rec;
+  qtd++;
+
+  document.getElementById('tabela').innerHTML += `
+  <tr>
+    <td>${cliente}</td>
+    <td>R$ ${valor.toFixed(2)}</td>
+    <td>${tipo}%</td>
+    <td>R$ ${rec.toFixed(2)}</td>
+  </tr>`;
+
+  document.getElementById('total').innerText = 'R$ ' + total.toFixed(2);
+  document.getElementById('clientes').innerText = qtd;
+
+  document.getElementById('cliente').value = '';
+  document.getElementById('valor').value = '';
+}
+</script>
+
+</body>
+</html>
