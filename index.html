@@ -5,95 +5,112 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Comissão André</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+
 <style>
+*{margin:0;padding:0;box-sizing:border-box}
 body{
-  margin:0;
-  font-family:'Segoe UI',sans-serif;
-  background:radial-gradient(circle at top,#0a0f1f,#000);
+  font-family:'Rajdhani',sans-serif;
+  background:radial-gradient(circle at top,#020617,#000);
   color:#fff;
 }
 
-.container{
-  display:grid;
-  grid-template-columns:300px 1fr;
-  min-height:100vh;
-}
-
-.sidebar{
-  background:#050a18;
+.wrapper{
   padding:20px;
-  border-right:1px solid #0ff3;
-  text-align:center;
+  max-width:1400px;
+  margin:auto;
 }
 
-.sidebar img{
-  width:200px;
-  border-radius:20px;
-  box-shadow:0 0 25px #00f7ff55;
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
 }
 
-.sidebar h2{
-  margin-top:15px;
-  color:#00eaff;
-}
-
-.main{
-  padding:30px;
-}
-
-h1{
+.title{
+  font-family:'Orbitron';
   font-size:38px;
-  color:#00eaff;
+}
+
+.title span{color:#00eaff}
+
+.grid{
+  display:grid;
+  grid-template-columns:350px 1fr;
+  gap:20px;
 }
 
 .card{
-  background:#0b132b;
-  padding:20px;
+  background:#020617;
+  border:1px solid #00eaff33;
   border-radius:15px;
-  margin-top:20px;
-  box-shadow:0 0 15px #00eaff22;
+  padding:20px;
+  box-shadow:0 0 25px #00eaff22;
+}
+
+.avatar{
+  text-align:center;
+}
+
+.avatar img{
+  width:100%;
+  border-radius:20px;
+  box-shadow:0 0 30px #00eaff55;
 }
 
 input,select{
   width:100%;
   padding:12px;
   margin-top:10px;
-  border:none;
-  border-radius:10px;
-  background:#020617;
+  background:#000;
+  border:1px solid #00eaff33;
   color:#fff;
+  border-radius:10px;
 }
 
+.buttons{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+.buttons div{
+  flex:1;
+  padding:12px;
+  text-align:center;
+  border:1px solid #00eaff55;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.active{background:#00eaff;color:#000}
+
 button{
-  margin-top:15px;
-  padding:14px;
   width:100%;
+  margin-top:15px;
+  padding:15px;
   border:none;
   border-radius:12px;
   background:#00eaff;
   color:#000;
   font-weight:bold;
   cursor:pointer;
-  transition:0.3s;
-}
-
-button:hover{
-  transform:scale(1.05);
 }
 
 .stats{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  grid-template-columns:repeat(4,1fr);
   gap:15px;
   margin-top:20px;
 }
 
 .stat{
-  background:#020617;
   padding:15px;
-  border-radius:12px;
+  background:#000;
+  border:1px solid #00eaff22;
+  border-radius:10px;
   text-align:center;
-  box-shadow:0 0 10px #00eaff22;
 }
 
 .table{
@@ -104,101 +121,113 @@ button:hover{
 
 .table th,.table td{
   padding:10px;
-  border-bottom:1px solid #00eaff33;
+  border-bottom:1px solid #00eaff22;
 }
 
-.table th{
-  color:#00eaff;
-}
+.table th{color:#00eaff}
 
 </style>
 </head>
 
 <body>
+<div class="wrapper">
 
-<div class="container">
+<div class="header">
+  <div class="title">COMISSÃO <span>ANDRÉ</span></div>
+  <div>Analista de Sistemas</div>
+</div>
 
-  <div class="sidebar">
-    <img src="assets/Andre.jpg" alt="André">
-    <h2>Comissão André</h2>
-  </div>
+<div class="grid">
 
-  <div class="main">
-    <h1>💰 Comissão André</h1>
+<div class="card avatar">
+  <img src="assets/Andre.jpg">
+</div>
 
-    <div class="card">
-      <h3>Novo Cálculo</h3>
+<div>
 
-      <input id="cliente" placeholder="Cliente">
-      <input id="valor" type="number" placeholder="Valor">
+<div class="card">
+<h3>Novo Cálculo</h3>
 
-      <select id="tipo">
-        <option value="5">Venda 5%</option>
-        <option value="25">Lead 25%</option>
-        <option value="100">Meu Cliente 100%</option>
-      </select>
+<input id="cliente" placeholder="Cliente">
+<input id="valor" type="number" placeholder="Valor">
 
-      <button onclick="add()">Adicionar</button>
-    </div>
+<div class="buttons">
+  <div onclick="setTipo(5)" id="b1">Venda 5%</div>
+  <div onclick="setTipo(25)" id="b2">Lead 25%</div>
+  <div onclick="setTipo(100)" id="b3">100%</div>
+</div>
 
-    <div class="stats">
-      <div class="stat">
-        <h4>Total</h4>
-        <p id="total">R$ 0.00</p>
-      </div>
-      <div class="stat">
-        <h4>Clientes</h4>
-        <p id="clientes">0</p>
-      </div>
-    </div>
+<button onclick="add()">ADICIONAR +</button>
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Valor</th>
-          <th>%</th>
-          <th>Recebimento</th>
-        </tr>
-      </thead>
-      <tbody id="tabela"></tbody>
-    </table>
+</div>
 
-  </div>
+<div class="stats">
+  <div class="stat"><h4>Clientes</h4><p id="qtd">0</p></div>
+  <div class="stat"><h4>Total</h4><p id="total">R$ 0</p></div>
+  <div class="stat"><h4>Média</h4><p id="media">R$ 0</p></div>
+  <div class="stat"><h4>Maior</h4><p id="maior">R$ 0</p></div>
+</div>
+
+<table class="table">
+<thead>
+<tr>
+<th>#</th>
+<th>Cliente</th>
+<th>%</th>
+<th>Valor</th>
+<th>Recebimento</th>
+</tr>
+</thead>
+<tbody id="tb"></tbody>
+</table>
+
+</div>
+
+</div>
 
 </div>
 
 <script>
-let total = 0;
-let qtd = 0;
+let tipo=5;
+let total=0;
+let qtd=0;
+let maior=0;
+
+function setTipo(t){
+  tipo=t;
+  document.querySelectorAll('.buttons div').forEach(e=>e.classList.remove('active'));
+  if(t==5)document.getElementById('b1').classList.add('active');
+  if(t==25)document.getElementById('b2').classList.add('active');
+  if(t==100)document.getElementById('b3').classList.add('active');
+}
 
 function add(){
-  let cliente = document.getElementById('cliente').value;
-  let valor = parseFloat(document.getElementById('valor').value);
-  let tipo = parseFloat(document.getElementById('tipo').value);
+  let cliente=document.getElementById('cliente').value;
+  let valor=parseFloat(document.getElementById('valor').value);
+  if(!cliente||!valor)return alert('Preencha');
 
-  if(!cliente || !valor){
-    alert('Preencha tudo');
-    return;
-  }
+  let rec=valor*tipo/100;
 
-  let rec = valor * tipo / 100;
-  total += rec;
+  total+=rec;
   qtd++;
+  if(rec>maior)maior=rec;
 
-  document.getElementById('tabela').innerHTML += `
+  document.getElementById('tb').innerHTML+=`
   <tr>
-    <td>${cliente}</td>
-    <td>R$ ${valor.toFixed(2)}</td>
-    <td>${tipo}%</td>
-    <td>R$ ${rec.toFixed(2)}</td>
+  <td>${qtd}</td>
+  <td>${cliente}</td>
+  <td>${tipo}%</td>
+  <td>R$ ${valor.toFixed(2)}</td>
+  <td>R$ ${rec.toFixed(2)}</td>
   </tr>`;
 
-  document.getElementById('total').innerText = 'R$ ' + total.toFixed(2);
-  document.getElementById('clientes').innerText = qtd;
+  document.getElementById('total').innerText='R$ '+total.toFixed(2);
+  document.getElementById('qtd').innerText=qtd;
+  document.getElementById('media').innerText='R$ '+(total/qtd).toFixed(2);
+  document.getElementById('maior').innerText='R$ '+maior.toFixed(2);
 
-  document.getElementById('cliente').value = '';
-  document.getElementById('valor').value = '';
+  document.getElementById('cliente').value='';
+  document.getElementById('valor').value='';
 }
 </script>
 
