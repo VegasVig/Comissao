@@ -627,13 +627,117 @@
   // EXPORT
   document.getElementById('exportBtn').addEventListener('click', () => {
     if (!entries.length) { showToast('⚠️ Nenhum dado para exportar!'); return; }
-    const h = ['#','Cliente','Tipo','Valor do Orçamento','%','Seu Recebimento','Data'];
-    const rows = entries.map((e,i)=>[i+1,e.cliente,e.tipo==='meu'?'Meu Cliente':e.tipo.charAt(0).toUpperCase()+e.tipo.slice(1),e.valor.toFixed(2),e.pct+'%',e.recebimento.toFixed(2),e.data]);
-    const csv = [h,...rows].map(r=>r.join(';')).join('\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));
-    a.download = 'comissoes_andre.csv'; a.click();
-    showToast('📊 CSV exportado com sucesso!');
+
+    const total = entries.reduce((s,e)=>s+e.recebimento,0);
+    const maior = Math.max(...entries.map(e=>e.recebimento));
+    const media = total / entries.length;
+    const hoje = new Date().toLocaleDateString('pt-BR');
+
+    const rows = entries.map((e,i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td>${e.cliente}</td>
+        <td><span class="badge ${e.tipo}">${e.tipo==='meu'?'MEU CLIENTE':e.tipo.toUpperCase()}</span></td>
+        <td>${formatBRL(e.valor)}</td>
+        <td>${e.pct}%</td>
+        <td class="td-receive">${formatBRL(e.recebimento)}</td>
+        <td>${e.data}</td>
+      </tr>`).join('');
+
+    const win = window.open('','_blank');
+    win.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Relatório de Comissões - André</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Rajdhani',sans-serif; background:#030811; color:#d6eaff; padding:30px; }
+  
+  .header { text-align:center; margin-bottom:30px; padding-bottom:20px; border-bottom:2px solid #1a5aad; }
+  .header h1 { font-family:'Orbitron',sans-serif; font-size:22px; color:#00d4ff; letter-spacing:4px; text-shadow:0 0 20px rgba(0,212,255,0.5); margin-bottom:6px; }
+  .header h2 { font-family:'Orbitron',sans-serif; font-size:13px; color:#4da6ff; letter-spacing:3px; margin-bottom:10px; }
+  .header .meta { font-size:12px; color:#6a9fd4; letter-spacing:1px; }
+  
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+  .stat { background:#060f1e; border:1px solid #0f2d55; border-radius:10px; padding:14px; text-align:center; }
+  .stat-label { font-size:10px; color:#6a9fd4; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px; }
+  .stat-value { font-family:'Orbitron',sans-serif; font-size:15px; font-weight:700; }
+  .stat-value.cyan { color:#00d4ff; }
+  .stat-value.blue { color:#4da6ff; }
+  .stat-value.green { color:#22c55e; }
+  .stat-value.purple { color:#a78bfa; }
+
+  table { width:100%; border-collapse:collapse; background:#060f1e; border-radius:12px; overflow:hidden; }
+  thead { background:#091525; }
+  th { text-align:left; font-size:10px; font-weight:700; letter-spacing:1.5px; color:#2a5080; text-transform:uppercase; padding:12px 10px; border-bottom:1px solid #0f2d55; }
+  td { padding:11px 10px; font-size:13px; color:#6a9fd4; border-bottom:1px solid rgba(15,45,85,0.5); }
+  tr:last-child td { border-bottom:none; }
+  tr:nth-child(even) { background:rgba(30,127,255,0.03); }
+  
+  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:1px; }
+  .badge.venda { background:rgba(30,127,255,0.15); color:#4da6ff; border:1px solid rgba(30,127,255,0.3); }
+  .badge.lead { background:rgba(139,92,246,0.15); color:#a78bfa; border:1px solid rgba(139,92,246,0.3); }
+  .badge.meu { background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3); }
+  .td-receive { color:#00d4ff !important; font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; }
+
+  .footer { text-align:center; margin-top:24px; padding-top:16px; border-top:1px solid #0f2d55; font-size:11px; color:#2a5080; letter-spacing:1px; }
+  .footer span { color:#1e7fff; }
+
+  @media print {
+    body { background:#030811 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    @page { margin:10mm; size:A4 landscape; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>🛡️ VEGAS VIGILÂNCIA</h1>
+    <h2>RELATÓRIO DE COMISSÕES — ANDRÉ</h2>
+    <div class="meta">Gerado em ${hoje} &nbsp;•&nbsp; ${entries.length} registro(s)</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat">
+      <div class="stat-label">Total de Clientes</div>
+      <div class="stat-value blue">${entries.length}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total a Receber</div>
+      <div class="stat-value cyan">${formatBRL(total)}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Média por Cliente</div>
+      <div class="stat-value green">${formatBRL(media)}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Maior Comissão</div>
+      <div class="stat-value purple">${formatBRL(maior)}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Cliente</th><th>Tipo</th><th>Valor do Orçamento</th>
+        <th>%</th><th>Seu Recebimento</th><th>Data</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <div class="footer">
+    Desenvolvido por <span>André</span> &nbsp;•&nbsp; Analista de Sistemas &nbsp;•&nbsp; Vegas Vigilância
+  </div>
+
+  <script>
+    window.onload = () => { window.print(); }
+  <\/script>
+</body>
+</html>`);
+    win.document.close();
+    showToast('📄 PDF gerado com sucesso!');
   });
 
   // SUPERVISOR MODAL
