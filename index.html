@@ -152,7 +152,6 @@
     position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
     background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
   }
-  /* corner decorations */
   .corner { position: absolute; width: 16px; height: 16px; }
   .corner.tl { top: 6px; left: 6px; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
   .corner.tr { top: 6px; right: 6px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
@@ -304,6 +303,7 @@
   .report-title { font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;color:var(--text-primary);text-transform:uppercase; }
   .export-btn { background:rgba(30,127,255,0.08);border:1px solid var(--border-glow);border-radius:6px;padding:7px 14px;color:var(--blue-bright);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.3s;text-transform:uppercase; }
   .export-btn:hover { background:rgba(30,127,255,0.18);box-shadow:0 0 15px rgba(30,127,255,0.2); }
+  .export-btn:disabled { opacity:0.5; cursor:not-allowed; }
 
   table { width:100%;border-collapse:collapse; }
   thead tr { border-bottom:1px solid var(--border-blue); }
@@ -544,6 +544,9 @@
   </div>
 </div>
 
+<!-- jsPDF via CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
   // PARTICLES
   const pc = document.getElementById('particles');
@@ -624,120 +627,210 @@
     document.getElementById('maiorComissao').textContent = formatBRL(n?Math.max(...entries.map(e=>e.recebimento)):0);
   }
 
-  // EXPORT
+  // EXPORT PDF — download direto via jsPDF
   document.getElementById('exportBtn').addEventListener('click', () => {
     if (!entries.length) { showToast('⚠️ Nenhum dado para exportar!'); return; }
 
-    const total = entries.reduce((s,e)=>s+e.recebimento,0);
-    const maior = Math.max(...entries.map(e=>e.recebimento));
-    const media = total / entries.length;
-    const hoje = new Date().toLocaleDateString('pt-BR');
+    const btn = document.getElementById('exportBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ GERANDO PDF...';
 
-    const rows = entries.map((e,i) => `
-      <tr>
-        <td>${i+1}</td>
-        <td>${e.cliente}</td>
-        <td><span class="badge ${e.tipo}">${e.tipo==='meu'?'MEU CLIENTE':e.tipo.toUpperCase()}</span></td>
-        <td>${formatBRL(e.valor)}</td>
-        <td>${e.pct}%</td>
-        <td class="td-receive">${formatBRL(e.recebimento)}</td>
-        <td>${e.data}</td>
-      </tr>`).join('');
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-    const win = window.open('','_blank');
-    win.document.write(`<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Relatório de Comissões - André</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Rajdhani',sans-serif; background:#030811; color:#d6eaff; padding:30px; }
-  
-  .header { text-align:center; margin-bottom:30px; padding-bottom:20px; border-bottom:2px solid #1a5aad; }
-  .header h1 { font-family:'Orbitron',sans-serif; font-size:22px; color:#00d4ff; letter-spacing:4px; text-shadow:0 0 20px rgba(0,212,255,0.5); margin-bottom:6px; }
-  .header h2 { font-family:'Orbitron',sans-serif; font-size:13px; color:#4da6ff; letter-spacing:3px; margin-bottom:10px; }
-  .header .meta { font-size:12px; color:#6a9fd4; letter-spacing:1px; }
-  
-  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
-  .stat { background:#060f1e; border:1px solid #0f2d55; border-radius:10px; padding:14px; text-align:center; }
-  .stat-label { font-size:10px; color:#6a9fd4; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px; }
-  .stat-value { font-family:'Orbitron',sans-serif; font-size:15px; font-weight:700; }
-  .stat-value.cyan { color:#00d4ff; }
-  .stat-value.blue { color:#4da6ff; }
-  .stat-value.green { color:#22c55e; }
-  .stat-value.purple { color:#a78bfa; }
+      const total = entries.reduce((s,e)=>s+e.recebimento,0);
+      const maior = Math.max(...entries.map(e=>e.recebimento));
+      const media = total / entries.length;
+      const hoje = new Date().toLocaleDateString('pt-BR');
+      const W = doc.internal.pageSize.getWidth();
+      const H = doc.internal.pageSize.getHeight();
 
-  table { width:100%; border-collapse:collapse; background:#060f1e; border-radius:12px; overflow:hidden; }
-  thead { background:#091525; }
-  th { text-align:left; font-size:10px; font-weight:700; letter-spacing:1.5px; color:#2a5080; text-transform:uppercase; padding:12px 10px; border-bottom:1px solid #0f2d55; }
-  td { padding:11px 10px; font-size:13px; color:#6a9fd4; border-bottom:1px solid rgba(15,45,85,0.5); }
-  tr:last-child td { border-bottom:none; }
-  tr:nth-child(even) { background:rgba(30,127,255,0.03); }
-  
-  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:1px; }
-  .badge.venda { background:rgba(30,127,255,0.15); color:#4da6ff; border:1px solid rgba(30,127,255,0.3); }
-  .badge.lead { background:rgba(139,92,246,0.15); color:#a78bfa; border:1px solid rgba(139,92,246,0.3); }
-  .badge.meu { background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3); }
-  .td-receive { color:#00d4ff !important; font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; }
+      // ── FUNDO ──
+      doc.setFillColor(3, 8, 17);
+      doc.rect(0, 0, W, H, 'F');
 
-  .footer { text-align:center; margin-top:24px; padding-top:16px; border-top:1px solid #0f2d55; font-size:11px; color:#2a5080; letter-spacing:1px; }
-  .footer span { color:#1e7fff; }
+      // ── HEADER ──
+      doc.setFillColor(6, 15, 30);
+      doc.rect(0, 0, W, 30, 'F');
+      doc.setDrawColor(0, 212, 255);
+      doc.setLineWidth(0.6);
+      doc.line(0, 30, W, 30);
+      // linha decorativa topo
+      doc.setDrawColor(30, 127, 255);
+      doc.setLineWidth(0.4);
+      doc.line(0, 0.2, W, 0.2);
 
-  @media print {
-    body { background:#030811 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    @page { margin:10mm; size:A4 landscape; }
-  }
-</style>
-</head>
-<body>
-  <div class="header">
-    <h1>🛡️ VEGAS VIGILÂNCIA</h1>
-    <h2>RELATÓRIO DE COMISSÕES — ANDRÉ</h2>
-    <div class="meta">Gerado em ${hoje} &nbsp;•&nbsp; ${entries.length} registro(s)</div>
-  </div>
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.setTextColor(0, 212, 255);
+      doc.text('VEGAS VIGILANCIA', W / 2, 12, { align: 'center' });
 
-  <div class="stats-grid">
-    <div class="stat">
-      <div class="stat-label">Total de Clientes</div>
-      <div class="stat-value blue">${entries.length}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Total a Receber</div>
-      <div class="stat-value cyan">${formatBRL(total)}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Média por Cliente</div>
-      <div class="stat-value green">${formatBRL(media)}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Maior Comissão</div>
-      <div class="stat-value purple">${formatBRL(maior)}</div>
-    </div>
-  </div>
+      doc.setFontSize(9);
+      doc.setTextColor(77, 166, 255);
+      doc.text('RELATORIO DE COMISSOES  —  ANDRE', W / 2, 20, { align: 'center' });
 
-  <table>
-    <thead>
-      <tr>
-        <th>#</th><th>Cliente</th><th>Tipo</th><th>Valor do Orçamento</th>
-        <th>%</th><th>Seu Recebimento</th><th>Data</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
-  </table>
+      doc.setFontSize(8);
+      doc.setTextColor(106, 159, 212);
+      doc.text(`Gerado em ${hoje}   |   ${entries.length} registro(s)`, W / 2, 27, { align: 'center' });
 
-  <div class="footer">
-    Desenvolvido por <span>André</span> &nbsp;•&nbsp; Analista de Sistemas &nbsp;•&nbsp; Vegas Vigilância
-  </div>
+      // ── CARDS DE STATS ──
+      const statsData = [
+        { label: 'TOTAL DE CLIENTES', value: String(entries.length), color: [77, 166, 255] },
+        { label: 'TOTAL A RECEBER',   value: formatBRL(total),       color: [0, 212, 255] },
+        { label: 'MEDIA POR CLIENTE', value: formatBRL(media),       color: [34, 197, 94] },
+        { label: 'MAIOR COMISSAO',    value: formatBRL(maior),       color: [167, 139, 250] },
+      ];
+      const cardW = 64, cardH = 18, cardY = 34, gap = 4;
+      const totalCards = cardW * 4 + gap * 3;
+      const startCards = (W - totalCards) / 2;
 
-  <script>
-    window.onload = () => { window.print(); }
-  <\/script>
-</body>
-</html>`);
-    win.document.close();
-    showToast('📄 PDF gerado com sucesso!');
+      statsData.forEach((s, i) => {
+        const x = startCards + i * (cardW + gap);
+        doc.setFillColor(9, 21, 37);
+        doc.roundedRect(x, cardY, cardW, cardH, 2, 2, 'F');
+        doc.setDrawColor(15, 45, 85);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(x, cardY, cardW, cardH, 2, 2, 'S');
+        // linha topo do card
+        doc.setDrawColor(...s.color);
+        doc.setLineWidth(0.4);
+        doc.line(x + 2, cardY, x + cardW - 2, cardY);
+
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(106, 159, 212);
+        doc.text(s.label, x + cardW / 2, cardY + 6, { align: 'center' });
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...s.color);
+        doc.text(s.value, x + cardW / 2, cardY + 14, { align: 'center' });
+      });
+
+      // ── TABELA ──
+      const cols    = ['#', 'CLIENTE', 'TIPO', 'ORCAMENTO', '%', 'RECEBIMENTO', 'DATA'];
+      const colW    = [10,  62,        28,     40,          12,  44,            22];
+      const tableX  = 14;
+      const tableW  = W - 28;
+      let y         = 56;
+
+      // cabeçalho da tabela
+      doc.setFillColor(9, 21, 37);
+      doc.rect(tableX, y, tableW, 9, 'F');
+      doc.setDrawColor(26, 90, 173);
+      doc.setLineWidth(0.3);
+      doc.rect(tableX, y, tableW, 9, 'S');
+
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(42, 80, 128);
+      let cx = tableX + 3;
+      cols.forEach((c, i) => {
+        doc.text(c, cx, y + 6);
+        cx += colW[i];
+      });
+      y += 9;
+
+      // linhas da tabela
+      entries.forEach((e, idx) => {
+        // nova página se necessário
+        if (y > H - 16) {
+          doc.addPage();
+          doc.setFillColor(3, 8, 17);
+          doc.rect(0, 0, W, H, 'F');
+          y = 14;
+        }
+
+        const isEven = idx % 2 === 0;
+        doc.setFillColor(...(isEven ? [3, 8, 17] : [6, 15, 30]));
+        doc.rect(tableX, y, tableW, 9, 'F');
+
+        doc.setDrawColor(15, 45, 85);
+        doc.setLineWidth(0.15);
+        doc.line(tableX, y + 9, tableX + tableW, y + 9);
+
+        const tipoColor = e.tipo === 'venda' ? [77,166,255] : e.tipo === 'lead' ? [167,139,250] : [34,197,94];
+        const tipoLabel = e.tipo === 'meu' ? 'MEU CLIENTE' : e.tipo.toUpperCase();
+
+        cx = tableX + 3;
+        doc.setFontSize(8);
+
+        // #
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(42, 80, 128);
+        doc.text(String(idx + 1), cx, y + 6); cx += colW[0];
+
+        // cliente
+        doc.setTextColor(214, 234, 255);
+        doc.text(e.cliente.length > 30 ? e.cliente.substring(0, 30) + '...' : e.cliente, cx, y + 6); cx += colW[1];
+
+        // tipo
+        doc.setTextColor(...tipoColor);
+        doc.text(tipoLabel, cx, y + 6); cx += colW[2];
+
+        // orçamento
+        doc.setTextColor(214, 234, 255);
+        doc.text(formatBRL(e.valor), cx, y + 6); cx += colW[3];
+
+        // %
+        doc.setTextColor(106, 159, 212);
+        doc.text(e.pct + '%', cx, y + 6); cx += colW[4];
+
+        // recebimento
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 212, 255);
+        doc.text(formatBRL(e.recebimento), cx, y + 6); cx += colW[5];
+
+        // data
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(42, 80, 128);
+        doc.text(e.data, cx, y + 6);
+
+        y += 9;
+      });
+
+      // ── LINHA TOTAL ──
+      if (y <= H - 20) {
+        doc.setFillColor(9, 21, 37);
+        doc.rect(tableX, y, tableW, 10, 'F');
+        doc.setDrawColor(26, 90, 173);
+        doc.setLineWidth(0.4);
+        doc.line(tableX, y, tableX + tableW, y);
+        doc.line(tableX, y + 10, tableX + tableW, y + 10);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(77, 166, 255);
+        doc.text('TOTAL GERAL', tableX + 3, y + 7);
+
+        doc.setTextColor(0, 212, 255);
+        const recCol = tableX + 3 + colW[0] + colW[1] + colW[2] + colW[3] + colW[4];
+        doc.text(formatBRL(total), recCol, y + 7);
+        y += 10;
+      }
+
+      // ── RODAPÉ ──
+      const footerY = H - 8;
+      doc.setDrawColor(15, 45, 85);
+      doc.setLineWidth(0.3);
+      doc.line(tableX, footerY - 4, W - tableX, footerY - 4);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(42, 80, 128);
+      doc.text('Desenvolvido por Andre  |  Analista de Sistemas  |  Vegas Vigilancia', W / 2, footerY, { align: 'center' });
+
+      // ── SALVAR ──
+      doc.save('comissoes_andre.pdf');
+      showToast('📄 PDF baixado com sucesso!');
+
+    } catch (err) {
+      console.error(err);
+      showToast('❌ Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📄 EXPORTAR PDF';
+    }
   });
 
   // SUPERVISOR MODAL
